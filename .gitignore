@@ -1,0 +1,5 @@
+.env
+processed/
+uploads/
+*.xlsx
+client.py
