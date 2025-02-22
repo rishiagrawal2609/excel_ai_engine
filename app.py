@@ -42,7 +42,7 @@ async def upload_excel_file(excel_file: UploadFile = File(...)):
         "length": df.shape[0]
     }
 
-@app.post("/upload-multiple-excel/")
+@app.post("/upload-multiple")
 async def upload_multiple_excel_files(excel_files: List[UploadFile] = File(...)):
     results = []
 
