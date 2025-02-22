@@ -101,6 +101,40 @@ def maths_operations_on_same_col(action, df, input_column_name):
     return df
 
 
+def maths_operations_on_diff_cols(action, df, column1, column2):
+    '''
+    Description: This function performs basic mathematical operations such as addition, subtraction, multiplication, and division on numerical columns of a DataFrame. It creates new columns to store the results.
+    
+    Args:
+    action (str): The mathematical operation to perform. Choose from ['add', 'subtract', 'multiply', 'divide'].
+    df (pd.DataFrame): The DataFrame containing the data.
+    column1 (str): The name of the first column on which the operation is to be performed.
+    column2 (str): The name of the second column on which the operation is to be performed.
+
+    Returns:
+    pd.DataFrame: The DataFrame with the new column added containing the result of the mathematical operation.
+    '''
+    if column1 not in df.columns or column2 not in df.columns:
+        raise ValueError(f"One or both columns ('{column1}', '{column2}') not found in DataFrame.")
+
+    result_col = f"{column1}_{action}_{column2}"
+
+    if action == "add":
+        df[result_col] = df[column1] + df[column2]
+    elif action == "subtract":
+        df[result_col] = df[column1] - df[column2]
+    elif action == "multiply":
+        df[result_col] = df[column1] * df[column2]
+    elif action == "divide":
+        if df[column2].eq(0).any():
+            raise ZeroDivisionError(f"Cannot divide by zero in column '{column2}'.")
+        df[result_col] = df[column1] / df[column2]
+    else:
+        raise ValueError("Invalid operation! Choose from ['add', 'subtract', 'multiply', 'divide']")
+
+    return df
+
+
 def calculate_summary_report(df):
     '''
     Description: This function calculates aggregations like sum, average, min, max, etc., on numerical columns of a DataFrame and produces a summary report.
