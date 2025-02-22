@@ -6,6 +6,9 @@ from fastapi import FastAPI, UploadFile, File, Form
 import shutil
 import os
 from typing import List
+import excel_functions as ef
+
+from query_parser import get_operation, execute_llm_function
 
 app = FastAPI()
 
@@ -17,7 +20,6 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True) # For saving the uploaded files
 
 #Creating the DataFrame for the data manupulation
 df = pd.DataFrame()
-
 
 
 @app.get("/")
@@ -60,6 +62,16 @@ async def upload_multiple_excel_files(excel_files: List[UploadFile] = File(...))
 @app.post("/query")
 def query_by_user(user_input: str = Form(...)):
     return {"user_input": user_input}
+
+
+@app.post("/operate")
+def operate(user_input: str = Form(...)):
+    response = get_operation(user_input)
+    print(response)
+    out = execute_llm_function(ef.dfs['read_df'], response)
+    return {"result":out}
+
+
 
 
 

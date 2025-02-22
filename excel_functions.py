@@ -68,6 +68,8 @@ dfs = create_dfs_from_uploads()
 #     print(f"\nDataFrame for {var_name}:")
 #     print(df.head())
 
+
+
 def maths_operations_on_same_col(action, df, input_column_name):
     '''
     Description: This function performs basic mathematical operations such as addition, subtraction, multiplication, and division on numerical columns of a DataFrame. It creates new columns to store the results.
@@ -283,3 +285,53 @@ def filter_data(df, column_name, value, dropna=True):
         filtered_df = filtered_df.dropna()
     
     return filtered_df
+
+def sum_with_filter(df, column_name, value):
+    '''
+    Description: This function calculates the sum of a column in a DataFrame after filtering based on a column value.
+
+    Args:
+    df (pd.DataFrame): The DataFrame containing the data.
+    column_name (str): The name of the column to filter on.
+    value: The value to filter on.
+
+    Returns:
+    float: The sum of the column after filtering.
+    '''
+    if column_name not in df.columns:
+        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+    
+    return df[df[column_name] == value].sum()
+
+def avg_with_filter(df, column_name, value):
+    '''
+    Description: This function calculates the average of a column in a DataFrame after filtering based on a column value.
+
+    Args:
+    df (pd.DataFrame): The DataFrame containing the data.
+    column_name (str): The name of the column to filter on.
+    value: The value to filter on.
+
+    Returns:
+    float: The average of the column after filtering.
+    '''
+    if column_name not in df.columns:
+        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+    
+    return df[df[column_name] == value].mean(numeric_only=True)
+
+def total_avg(df, column_name):
+    '''
+    Description: This function calculates the total average of a column in a DataFrame.
+
+    Args:
+    df (pd.DataFrame): The DataFrame containing the data.
+    column_name (str): The name of the column to calculate the average of.
+
+    Returns:
+    float: The total average of the column.
+    '''
+    if column_name not in df.columns:
+        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+    
+    return df[column_name].mean(numeric_only=True)
