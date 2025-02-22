@@ -1,0 +1,6 @@
+.env
+processed/
+uploads/
+*.xlsx
+client.py
+__pycache__/

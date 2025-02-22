@@ -3,15 +3,10 @@ from langchain_core.messages import SystemMessage,HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 import json
-from groq import Groq
 import os
 from dotenv import load_dotenv
 import pandas as pd
-
 import excel_functions
-
-
-
 import excel_functions as ef
 
 load_dotenv()
@@ -24,13 +19,6 @@ groq_chat = ChatGroq(
         model_name=model
 )
 
-df = pd.DataFrame()
-# for var_name, df in dfs.items():
-#      input("Select the DF for the operation:")
-#      print(f"\nDataFrame for {var_name}:")
-#      df = dfs[var_name]
-#      break
-df = ef.dfs['read_df']
 
 
 system_prompt = '''You are a friendly chatbot. Users provide you query and you provide the intent of the query.
@@ -105,7 +93,19 @@ Respond with the function call only, no explaination, no markdown, in plain text
 
 '''
 
-def get_intent(query):
+
+
+def get_intent(df,query):
+    '''
+    Description: This function is used to get the intent of the query
+
+    Args:
+    query: The query provided by the user
+
+    Returns:
+    response_json: The response json containing the intent
+    '''
+    
     query_updated = query + f' Available Columns: {df.columns} What operation should be performed?' +  'Choose from: sum, average, min, max, filter, join, pivot, unpivot, sentiment, summarize, date difference. the output should be only the json do not provide any explaination. Expected Output: {"operation": "average", "column": "Salary", "filter": {"Department": "IT"}}'
 
     result = groq_chat.invoke(query_updated)
@@ -115,8 +115,19 @@ def get_intent(query):
 
 
 
-def get_operation(query):
-    intent = get_intent(query)
+def get_operation(df,query):
+    '''
+    Description: This function is used to get the operation to be performed
+    
+    Args:
+    query: The query provided by the user
+    
+    Returns:
+    response: The response of the operation that user has requested
+    '''
+    
+
+    intent = get_intent(df,query)
     quey_updated = query + f' Available Columns: {df.columns}'
 
     result = groq_chat.invoke(system_prompt + 'User Query: '+quey_updated)
@@ -124,15 +135,11 @@ def get_operation(query):
     return response
 
 
-response = get_operation("What is the salary of the employee who works in finance")
-
-print(response)
-
 FUNCTION_MAP = {
     name: func for name, func in vars(excel_functions).items() if callable(func)
 }
 
-print("Loaded Functions:", FUNCTION_MAP.keys())
+
 
 
 
@@ -159,10 +166,3 @@ def execute_llm_function(df, function_call_str):
         return result
     except Exception as e:
         return {"error": f"Failed to execute function: {str(e)}"}
-    
-
-# Execute the function call and store the result
-result = execute_llm_function(ef.dfs['read_df'], response)
-
-print(result)
-

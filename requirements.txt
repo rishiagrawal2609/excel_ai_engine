@@ -1,13 +1,11 @@
 pandas
 numpy
-os
-re
-uvicron
+uvicorn
 fastapi
-shutil
-typing
 langchain
 langchain_groq
 python-dotenv
 langchain-core
 groq
+python-multipart
+openpyxl

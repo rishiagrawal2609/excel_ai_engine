@@ -12,31 +12,36 @@ from query_parser import get_operation, execute_llm_function
 
 app = FastAPI()
 
-
 UPLOAD_DIRECTORY = "./uploads"
 
-#Creating the dynamic directory
-os.makedirs(UPLOAD_DIRECTORY, exist_ok=True) # For saving the uploaded files
+# Creating the dynamic directory
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)  # For saving the uploaded files
 
-#Creating the DataFrame for the data manupulation
+# Creating the DataFrame for the data manipulation
 df = pd.DataFrame()
-
 
 @app.get("/")
 def home():
     return {"data": "Fast API works"}
 
-# Ensure directories exist
-os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
-
 @app.post("/upload")
 async def upload_excel_file(excel_file: UploadFile = File(...)):
+    '''
+    This function is used to upload the excel file
 
-    upload_file_path = os.path.join(UPLOAD_DIRECTORY, excel_file.filename) 
+    Args:
+    excel_file: The excel file to be uploaded
+
+    Returns:
+    dict: The response message and the number of rows in the uploaded file
+    '''
+
+    upload_file_path = os.path.join(UPLOAD_DIRECTORY, excel_file.filename)
 
     with open(upload_file_path, "wb") as buffer:
         shutil.copyfileobj(excel_file.file, buffer)
 
+    global df
     df = pd.read_excel(upload_file_path)
 
     return {
@@ -46,6 +51,15 @@ async def upload_excel_file(excel_file: UploadFile = File(...)):
 
 @app.post("/upload-multiple")
 async def upload_multiple_excel_files(excel_files: List[UploadFile] = File(...)):
+    '''
+    This function is used to upload multiple excel files
+    
+    Args:
+    excel_files: The list of excel files to be uploaded
+
+    Returns:
+    dict: The response message and the number of rows in each uploaded file
+    '''
     results = []
 
     for file in excel_files:
@@ -61,19 +75,33 @@ async def upload_multiple_excel_files(excel_files: List[UploadFile] = File(...))
 
 @app.post("/query")
 def query_by_user(user_input: str = Form(...)):
-    return {"user_input": user_input}
+    '''
+    This function is used to get the user input
+    
+    Args:
+    user_input: The user input
 
+    Returns:
+    dict: The user input
+    '''
+    return {"user_input": user_input}
 
 @app.post("/operate")
 def operate(user_input: str = Form(...)):
-    response = get_operation(user_input)
+    '''
+    This function is used to get the user input and return the response
+
+    Args:
+    user_input: The user input
+
+    Returns:
+    dict: The response of the operation that user has requested
+    '''
+
+    response = get_operation(df,user_input)
     print(response)
-    out = execute_llm_function(ef.dfs['read_df'], response)
-    return {"result":out}
-
-
-
-
+    out = execute_llm_function(df, response)
+    return {"result": out}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
