@@ -1,0 +1,13 @@
+pandas
+numpy
+os
+re
+uvicron
+fastapi
+shutil
+typing
+langchain
+langchain_groq
+python-dotenv
+langchain-core
+groq

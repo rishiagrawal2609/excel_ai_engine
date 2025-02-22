@@ -64,9 +64,9 @@ def create_dfs_from_uploads():
     return dfs
 
 dfs = create_dfs_from_uploads()
-for var_name, df in dfs.items():
-    print(f"\nDataFrame for {var_name}:")
-    print(df.head())
+# for var_name, df in dfs.items():
+#     print(f"\nDataFrame for {var_name}:")
+#     print(df.head())
 
 def maths_operations_on_same_col(action, df, input_column_name):
     '''
