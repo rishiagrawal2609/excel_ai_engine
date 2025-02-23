@@ -37,7 +37,6 @@ Clone The GitHub repository by this command:
 git clone https://github.com/rishiagrawal2609/excel_ai_engine.git
 ```
 
-
 The Docker file is provided to build the container, to build the container run the following command:
 
 ```bash
@@ -51,7 +50,6 @@ docker run -p 8000:8000 -e GROQ_API_KEY=<YOUR_API_KEY> excel-ai-engine
 ```
 
 The Engine will be up and running in `http://localhost:8000`
-
 
 ## API documentation
 
@@ -79,6 +77,7 @@ Example user input: "Create a pivot table showing total salary per department pe
 ![operate](./img/operate.png)
 
 - `/operate-unstruct` - For the unstructured text data you can do the sentiment analysis.
+Example user input: "Analyze the sentiment for the Customer_Review column."
 
 ![operate-unstruct](./img/operate-unstruct.png)
 
