@@ -4,3 +4,5 @@ uploads/
 *.xlsx
 client.py
 __pycache__/
+README.md
+img/
