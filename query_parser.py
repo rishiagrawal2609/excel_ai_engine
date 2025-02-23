@@ -56,6 +56,10 @@ Aggregation Functions**
      - Computes the overall average of a numerical column.  
      - Example: "What is the average revenue across all departments?"
 
+  - `min_max_values(df, column_name)`:
+    - Computes the minimum and maximum values of a numerical column.
+    - Example: "What are the minimum and maximum values of the 'Salary' column?"
+
 
 Data Manipulation & Filtering
    - `filter_data(df, column_name, value, dropna=True)`:  

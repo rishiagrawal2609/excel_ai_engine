@@ -349,6 +349,22 @@ def total_avg(df, column_name):
     
     return df[column_name].mean(numeric_only=True)
 
+def min_max_values(df, column_name):
+    '''
+    Description: This function calculates the minimum and maximum values of a column in a DataFrame.
+
+    Args:
+    df (pd.DataFrame): The DataFrame containing the data.
+    column_name (str): The name of the column to calculate the min and max values of.
+
+    Returns:
+    tuple: A tuple containing the minimum and maximum values of the column.
+    '''
+    if column_name not in df.columns:
+        raise HTTPException(status_code=400, detail=f"Column '{column_name}' not found in DataFrame.")
+    
+    return df[column_name].min(numeric_only=True), df[column_name].max(numeric_only=True)
+
 MAX_CHAR_LIMIT = 23000
 
 def truncate_text(text_list, max_chars=MAX_CHAR_LIMIT):
