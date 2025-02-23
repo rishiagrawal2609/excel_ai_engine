@@ -19,6 +19,8 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)  # For saving the uploaded files
 
 # Creating the DataFrame for the data manipulation
 df = pd.DataFrame()
+df_unstruct = pd.DataFrame()
+df_2 = pd.DataFrame() 
 
 @app.get("/")
 def home():
@@ -43,35 +45,39 @@ async def upload_excel_file(excel_file: UploadFile = File(...)):
 
     global df
     df = pd.read_excel(upload_file_path)
+    df_unstruct = pd.read_excel(upload_file_path, sheet_name='Unstructured_Data')
 
     return {
         "message": "File uploaded successfully",
-        "length": df.shape[0]
+        "length": df.shape[0],
+        "lenght_unstruct": df_unstruct.shape[0]
     }
 
-@app.post("/upload-multiple")
-async def upload_multiple_excel_files(excel_files: List[UploadFile] = File(...)):
+@app.post("/upload-second")
+async def upload_second_excel_file(excel_file: UploadFile = File(...)):
     '''
-    This function is used to upload multiple excel files
-    
+    This function is used to upload the excel file for the operations like join
+
     Args:
-    excel_files: The list of excel files to be uploaded
+    excel_file: The excel file to be uploaded
 
     Returns:
-    dict: The response message and the number of rows in each uploaded file
+    dict: The response message and the number of rows in the uploaded file
     '''
-    results = []
+    upload_file_path = os.path.join(UPLOAD_DIRECTORY, excel_file.filename)
 
-    for file in excel_files:
-        upload_file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
+    with open(upload_file_path, "wb") as buffer:
+        shutil.copyfileobj(excel_file.file, buffer)
 
-        with open(upload_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+    global df_2
+    df_2 = pd.read_excel(upload_file_path)
+    
 
-        df = pd.read_excel(upload_file_path)
-        results.append({"filename": file.filename, "num_rows": df.shape[0]})
+    return {
+        "message": "File uploaded successfully",
+        "length": df_2.shape[0],
+    }
 
-    return {"message": "Files uploaded successfully", "files": results}
 
 @app.post("/query")
 def query_by_user(user_input: str = Form(...)):
@@ -101,6 +107,23 @@ def operate(user_input: str = Form(...)):
     response = get_operation(df,user_input)
     print(response)
     out = execute_llm_function(df, response)
+    return {"result": out}
+
+
+@app.post("/operate-unstruct")
+def operate_unstruct(user_input: str = Form(...)):
+    '''
+    This function is used to get the user input and return the response
+
+    Args:
+    user_input: The user input
+
+    Returns:
+    dict: The response of the operation that user has requested
+    '''
+    response = get_operation(df_unstruct,user_input)
+    print(response)
+    out = execute_llm_function(df_unstruct, response)
     return {"result": out}
 
 if __name__ == "__main__":

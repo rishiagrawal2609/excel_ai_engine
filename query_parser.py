@@ -1,7 +1,4 @@
 from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage,HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
 import json
 import os
 from dotenv import load_dotenv
@@ -87,6 +84,11 @@ Date-Based Operations
      - Calculates the difference in days between two date columns.  
      - Example: "Calculate the number of days between 'StartDate' and 'EndDate'."
 
+Text Analysis & Sentiment
+    - `get_sentiment(df, text_column)`:
+        - Analyzes the sentiment of text data in a specific column.
+        - Example: "Analyze the sentiment of the 'Review' column."
+
 
 
 Respond with the function call only, no explaination, no markdown, in plain text.
@@ -127,9 +129,9 @@ def get_operation(df,query):
     '''
     
 
-    intent = get_intent(df,query)
-    quey_updated = query + f' Available Columns: {df.columns}'
-
+    #intent = get_intent(df,query)
+    quey_updated = query + f' Available Columns: {df.head()}'
+    print(quey_updated)
     result = groq_chat.invoke(system_prompt + 'User Query: '+quey_updated)
     response = result.content
     return response

@@ -7,3 +7,5 @@
  use /query to take the user query as a input
 
  use /operate for the AI call and the desired output
+
+DockerFile to create the image.

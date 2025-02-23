@@ -4,7 +4,19 @@ import pandas as pd
 import numpy as np
 import os
 import re
+from langchain_groq import ChatGroq
+import json
+import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+groq_chat = ChatGroq(
+    groq_api_key=os.getenv('GROQ_API_KEY'), 
+    model_name='llama-3.3-70b-versatile'
+)
 
 '''
 Supported Operations: The listed operations should be supported on the created Excel data. 
@@ -335,3 +347,34 @@ def total_avg(df, column_name):
         raise ValueError(f"Column '{column_name}' not found in DataFrame.")
     
     return df[column_name].mean(numeric_only=True)
+
+MAX_CHAR_LIMIT = 23000
+
+def truncate_text(text_list, max_chars=MAX_CHAR_LIMIT):
+    combined_text = "\n".join(text_list)
+    if len(combined_text) > max_chars:
+        combined_text = combined_text[:max_chars] 
+    return combined_text
+
+
+def get_sentiment(df,text_column):
+    '''
+    Description: This function is used to get the sentiment of the text
+    
+    Args:
+    text: The text for which sentiment needs to be calculated
+    
+    Returns:
+    sentiment: The sentiment of the text
+    '''
+    if text_column not in df.columns:
+        print(f"Error: Column '{text_column}' not found in the sheet.")
+        return None
+    text_data = df[text_column].dropna().astype(str).tolist()
+    text_data = truncate_text(text_data)
+    prompt = f"Analyze the sentiment of the following text entries:\n{text_data}\n"
+    prompt += "Classify each entry as Positive, Negative, or Neutral."
+
+    result = groq_chat.invoke(prompt)
+    response = result.content
+    return response
