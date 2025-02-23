@@ -7,6 +7,7 @@ import re
 from langchain_groq import ChatGroq
 import json
 import os
+from fastapi import HTTPException
 
 from dotenv import load_dotenv
 
@@ -95,7 +96,7 @@ def maths_operations_on_same_col(action, df, input_column_name):
     pd.DataFrame: The DataFrame with the new column added containing the result of the mathematical operation.
     '''
     if input_column_name not in df.columns:
-        raise ValueError(f"Column '{input_column_name}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{input_column_name}' not found in DataFrame.")
 
     result_col = f"{input_column_name}_{action}"
 
@@ -107,10 +108,10 @@ def maths_operations_on_same_col(action, df, input_column_name):
         df[result_col] = df[input_column_name] * df[input_column_name]
     elif action == "divide":
         if df[input_column_name].eq(0).any():
-            raise ZeroDivisionError("Cannot divide by zero.")
+            raise HTTPException(status_code=400, detail="Cannot divide by zero.")
         df[result_col] = df[input_column_name] / df[input_column_name]
     else:
-        raise ValueError("Invalid operation! Choose from ['add', 'subtract', 'multiply', 'divide']")
+        raise HTTPException(status_code=400, detail="Invalid operation! Choose from ['add', 'subtract', 'multiply', 'divide']")
     
     return df
 
@@ -129,7 +130,7 @@ def maths_operations_on_diff_cols(action, df, column1, column2):
     pd.DataFrame: The DataFrame with the new column added containing the result of the mathematical operation.
     '''
     if column1 not in df.columns or column2 not in df.columns:
-        raise ValueError(f"One or both columns ('{column1}', '{column2}') not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"One or both columns ('{column1}', '{column2}') not found in DataFrame.")
 
     result_col = f"{column1}_{action}_{column2}"
 
@@ -141,10 +142,10 @@ def maths_operations_on_diff_cols(action, df, column1, column2):
         df[result_col] = df[column1] * df[column2]
     elif action == "divide":
         if df[column2].eq(0).any():
-            raise ZeroDivisionError(f"Cannot divide by zero in column '{column2}'.")
+            raise HTTPException(status_code=400, detail=f"Cannot divide by zero in column '{column2}'.")
         df[result_col] = df[column1] / df[column2]
     else:
-        raise ValueError("Invalid operation! Choose from ['add', 'subtract', 'multiply', 'divide']")
+        raise HTTPException(status_code=400, detail="Invalid operation! Choose from ['add', 'subtract', 'multiply', 'divide']")
 
     return df
 
@@ -181,11 +182,11 @@ def join_datasets(df1, df2, join_type='inner', on=None):
     pd.DataFrame: The DataFrame resulting from the join operation.
     '''
     if not isinstance(df1, pd.DataFrame) or not isinstance(df2, pd.DataFrame):
-        raise ValueError("Both inputs should be pandas DataFrames.")
+        raise HTTPException(status_code=400, detail="Both inputs should be pandas DataFrames.")
     if on is None:
         common_cols = list(set(df1.columns) & set(df2.columns))
         if not common_cols:
-            raise ValueError("No common columns found for joining. Specify 'on' manually.")
+            raise HTTPException(status_code=400, detail="No common columns found for joining. Specify 'on' manually.")
         on = common_cols  # Use common columns as default join keys
     
     return pd.merge(df1, df2, how=join_type, on=on)
@@ -207,7 +208,7 @@ def pivot_table(df, index, columns, values, aggfunc='sum'):
     '''
 
     if any(col not in df.columns for col in [index, columns, values]):
-        raise ValueError("One or more specified columns are missing from the DataFrame.")
+        raise HTTPException(status_code=400, detail="One or more specified columns are missing from the DataFrame.")
     
     return pd.pivot_table(df, index=index, columns=columns, values=values, aggfunc=aggfunc)
 
@@ -226,7 +227,7 @@ def unpivot_table(df, value_vars, var_name='variable', value_name='value'):
     '''
 
     if not all(var in df.columns for var in value_vars):
-        raise ValueError("Some 'value_vars' are not found in the DataFrame.")
+        raise HTTPException(status_code=400, detail="Some 'value_vars' are not found in the DataFrame.")
     
     return pd.melt(df, id_vars=[col for col in df.columns if col not in value_vars], 
                    value_vars=value_vars, var_name=var_name, value_name=value_name)
@@ -244,7 +245,7 @@ def date_operations(df, date_column):
     pd.DataFrame: The DataFrame with new columns added for year, month, and day extracted from the date column.
     '''
     if date_column not in df.columns:
-        raise ValueError(f"Column '{date_column}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{date_column}' not found in DataFrame.")
 
     df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
     df['year'] = df[date_column].dt.year
@@ -267,7 +268,7 @@ def date_difference(df, start_date_column, end_date_column, result_column_name):
     pd.DataFrame: The DataFrame with the new column added containing the difference in days between the two dates.
     '''
     if start_date_column not in df.columns or end_date_column not in df.columns:
-        raise ValueError("One or both date columns are missing in the DataFrame.")
+        raise HTTPException(status_code=400, detail="One or both date columns are missing in the DataFrame.")
 
     df[start_date_column] = pd.to_datetime(df[start_date_column], errors='coerce')
     df[end_date_column] = pd.to_datetime(df[end_date_column], errors='coerce')
@@ -289,7 +290,7 @@ def filter_data(df, column_name, value, dropna=True):
     '''
 
     if column_name not in df.columns:
-        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{column_name}' not found in DataFrame.")
     
     filtered_df = df[df[column_name] == value]
     
@@ -311,7 +312,7 @@ def sum_with_filter(df, column_name, value):
     float: The sum of the column after filtering.
     '''
     if column_name not in df.columns:
-        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{column_name}' not found in DataFrame.")
     
     return df[df[column_name] == value].sum()
 
@@ -328,7 +329,7 @@ def avg_with_filter(df, column_name, value):
     float: The average of the column after filtering.
     '''
     if column_name not in df.columns:
-        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{column_name}' not found in DataFrame.")
     
     return df[df[column_name] == value].mean(numeric_only=True)
 
@@ -344,7 +345,7 @@ def total_avg(df, column_name):
     float: The total average of the column.
     '''
     if column_name not in df.columns:
-        raise ValueError(f"Column '{column_name}' not found in DataFrame.")
+        raise HTTPException(status_code=400, detail=f"Column '{column_name}' not found in DataFrame.")
     
     return df[column_name].mean(numeric_only=True)
 
@@ -368,8 +369,7 @@ def get_sentiment(df,text_column):
     sentiment: The sentiment of the text
     '''
     if text_column not in df.columns:
-        print(f"Error: Column '{text_column}' not found in the sheet.")
-        return None
+        raise HTTPException(status_code=400, detail=f"Column '{text_column}' not found in the sheet.")
     text_data = df[text_column].dropna().astype(str).tolist()
     text_data = truncate_text(text_data)
     prompt = f"Analyze the sentiment of the following text entries:\n{text_data}\n"

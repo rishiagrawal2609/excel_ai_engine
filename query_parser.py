@@ -3,6 +3,7 @@ import json
 import os
 from dotenv import load_dotenv
 import pandas as pd
+from fastapi import HTTPException
 import excel_functions
 import excel_functions as ef
 
@@ -15,8 +16,6 @@ groq_chat = ChatGroq(
         groq_api_key=groq_api_key, 
         model_name=model
 )
-
-
 
 system_prompt = '''You are a friendly chatbot. Users provide you query and you provide the intent of the query.
 
@@ -63,10 +62,6 @@ Data Manipulation & Filtering
      - Filters rows where a specific column matches a given value.  
      - Example: "Show all employees in the HR department."
 
-   - `join_datasets(df1, df2, join_type='inner', on=None)`:  
-     - Joins two datasets using inner, left, right, or outer joins.  
-     - Example: "Merge employee details with salary records on 'EmployeeID'."
-
    - `pivot_table(df, index, columns, values, aggfunc='sum')`:  
      - Creates a pivot table summarizing data.  
      - Example: "Pivot table showing total revenue per department per year."
@@ -95,9 +90,7 @@ Respond with the function call only, no explaination, no markdown, in plain text
 
 '''
 
-
-
-def get_intent(df,query):
+def get_intent(df, query):
     '''
     Description: This function is used to get the intent of the query
 
@@ -107,17 +100,17 @@ def get_intent(df,query):
     Returns:
     response_json: The response json containing the intent
     '''
-    
-    query_updated = query + f' Available Columns: {df.columns} What operation should be performed?' +  'Choose from: sum, average, min, max, filter, join, pivot, unpivot, sentiment, summarize, date difference. the output should be only the json do not provide any explaination. Expected Output: {"operation": "average", "column": "Salary", "filter": {"Department": "IT"}}'
+    try:
+        query_updated = query + f' Available Columns: {df.columns} What operation should be performed?' +  'Choose from: sum, average, min, max, filter, join, pivot, unpivot, sentiment, summarize, date difference. the output should be only the json do not provide any explaination. Expected Output: {"operation": "average", "column": "Salary", "filter": {"Department": "IT"}}'
 
-    result = groq_chat.invoke(query_updated)
-    response = result.content
-    response_json = json.loads(response)
-    return response_json
+        result = groq_chat.invoke(query_updated)
+        response = result.content
+        response_json = json.loads(response)
+        return response_json
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get intent: {str(e)}")
 
-
-
-def get_operation(df,query):
+def get_operation(df, query):
     '''
     Description: This function is used to get the operation to be performed
     
@@ -127,23 +120,20 @@ def get_operation(df,query):
     Returns:
     response: The response of the operation that user has requested
     '''
-    
-
-    #intent = get_intent(df,query)
-    quey_updated = query + f' Available Columns: {df.head()}'
-    print(quey_updated)
-    result = groq_chat.invoke(system_prompt + 'User Query: '+quey_updated)
-    response = result.content
-    return response
-
+    try:
+        query_updated = query + f' Available Columns: {df.columns}'
+        print(query_updated)
+        result = groq_chat.invoke(system_prompt + 'User Query: ' + query_updated)
+        response = result.content
+        if "join" in response:
+            df2 = pd.read_csv("./uploads/file2.csv")
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get operation: {str(e)}")
 
 FUNCTION_MAP = {
     name: func for name, func in vars(excel_functions).items() if callable(func)
 }
-
-
-
-
 
 def execute_llm_function(df, function_call_str):
     """
@@ -156,15 +146,12 @@ def execute_llm_function(df, function_call_str):
     Returns:
     result: The output of the executed function.
     """
-
-    # Ensure df is available in the execution context
     local_vars = {"df": df, **FUNCTION_MAP}
 
     try:
-        # Execute the function dynamically and store result
         result = eval(function_call_str, {}, local_vars)
         if isinstance(result, pd.DataFrame):
             return result.to_dict(orient="records")
         return result
     except Exception as e:
-        return {"error": f"Failed to execute function: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Failed to execute function: {str(e)}")
